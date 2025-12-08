@@ -1,12 +1,9 @@
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container">
         <a class="navbar-brand" href="index.php">
-            <!-- ZAID HOTEL Logo - Using the image with inline SVG fallback -->
-            <svg class="hotel-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20,80 L50,20 M50,20 L80,80 M35,55 L65,55" stroke="currentColor" stroke-width="3" fill="none"/>
-                <circle cx="50" cy="20" r="3" fill="currentColor"/>
-                <path d="M50,20 Q80,50 70,80" stroke="currentColor" stroke-width="2" fill="none"/>
-            </svg>
+            <img src="../uploads/room_images/zaid-logo.png" 
+                 alt="ZAID HOTEL Logo" 
+                 style="height: 50px; width: 50px; object-fit: contain;">
             <span>ZAID HOTEL</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">

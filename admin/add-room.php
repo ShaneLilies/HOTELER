@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($check_result->fetchArray()) {
         $error = "Room number already exists!";
     } else {
-        // Insert room using prepared statement
+        // Insert room using prepared statement (removed image column)
         $stmt = $conn->prepare("INSERT INTO room (room_number, room_type_id, floor, status) VALUES (?, ?, ?, ?)");
         $stmt->bindValue(1, $room_number, SQLITE3_TEXT);
         $stmt->bindValue(2, $room_type_id, SQLITE3_INTEGER);
@@ -35,6 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if ($stmt->execute()) {
             $success = "Room added successfully!";
+            // Clear form
+            $_POST = array();
         } else {
             $error = "Failed to add room!";
         }
@@ -64,11 +66,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </div>
                     <?php endif; ?>
                     
-                    <form method="POST" enctype="multipart/form-data">
+                    <form method="POST">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Room Number *</label>
-                                <input type="text" class="form-control" name="room_number" required>
+                                <input type="text" class="form-control" name="room_number" 
+                                       value="<?php echo $_POST['room_number'] ?? ''; ?>" required>
                                 <small class="text-muted">Example: 101, 202, etc.</small>
                             </div>
                             
@@ -77,7 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <select class="form-select" name="room_type_id" required>
                                     <option value="">Select Room Type</option>
                                     <?php foreach ($room_types as $type): ?>
-                                        <option value="<?php echo $type['room_type_id']; ?>">
+                                        <option value="<?php echo $type['room_type_id']; ?>"
+                                                <?php echo (isset($_POST['room_type_id']) && $_POST['room_type_id'] == $type['room_type_id']) ? 'selected' : ''; ?>>
                                             <?php echo htmlspecialchars($type['type_name']); ?> - $<?php echo number_format($type['nightly_rate'], 2); ?>/night
                                         </option>
                                     <?php endforeach; ?>
@@ -88,24 +92,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Floor *</label>
-                                <input type="text" class="form-control" name="floor" required>
+                                <input type="text" class="form-control" name="floor" 
+                                       value="<?php echo $_POST['floor'] ?? ''; ?>" required>
                                 <small class="text-muted">Example: 1, 2, G, etc.</small>
                             </div>
                             
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Status *</label>
                                 <select class="form-select" name="status" required>
-                                    <option value="Available">Available</option>
-                                    <option value="Occupied">Occupied</option>
-                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Available" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Available') ? 'selected' : ''; ?>>Available</option>
+                                    <option value="Occupied" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Occupied') ? 'selected' : ''; ?>>Occupied</option>
+                                    <option value="Maintenance" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Maintenance') ? 'selected' : ''; ?>>Maintenance</option>
                                 </select>
                             </div>
                         </div>
                         
-                        <div class="mb-4">
-                            <label class="form-label">Room Image (Optional)</label>
-                            <input type="file" class="form-control" name="image" accept="image/*">
-                            <small class="text-muted">Allowed formats: JPG, JPEG, PNG, GIF (Max 5MB)</small>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 
+                            <strong>Note:</strong> Room images are managed per room type, not per individual room. 
+                            After adding a room, you can manage the images for its room type using the 
+                            <strong>Manage Images</strong> button in the All Rooms page.
                         </div>
                         
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">

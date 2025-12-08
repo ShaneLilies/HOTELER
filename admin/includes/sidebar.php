@@ -4,7 +4,12 @@ $current_page = basename($_SERVER['PHP_SELF']);
 <div class="wrapper">
     <nav id="sidebar">
         <div class="sidebar-header">
-            <h3><i class="bi bi-building"></i> Hotel Admin</h3>
+            <div class="d-flex align-items-center mb-3">
+                <img src="../uploads/room_images/zaid-logo.png" 
+                     alt="ZAID HOTEL" 
+                     style="height: 50px; width: 50px; object-fit: contain; margin-right: 10px; filter: brightness(0) invert(1);">
+                <h3 class="mb-0"><i class="bi bi-building"></i> Hotel Admin</h3>
+            </div>
             <p class="mb-0">Welcome, <?php echo htmlspecialchars($_SESSION['admin_username']); ?></p>
         </div>
 

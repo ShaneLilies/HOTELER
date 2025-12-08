@@ -8,7 +8,17 @@ include 'includes/navbar.php';
 $check_in = $_GET['check_in'] ?? '';
 $check_out = $_GET['check_out'] ?? '';
 
-// Fetch ALL room types with availability count (don't hide occupied ones)
+// Validate dates
+if (!empty($check_in) && !empty($check_out)) {
+    if (strtotime($check_in) < strtotime(date('Y-m-d'))) {
+        $check_in = date('Y-m-d');
+    }
+    if (strtotime($check_out) <= strtotime($check_in)) {
+        $check_out = date('Y-m-d', strtotime($check_in . ' +1 day'));
+    }
+}
+
+// Fetch ALL room types with availability count
 $query = "SELECT rt.*, 
           (SELECT COUNT(*) FROM room r 
            WHERE r.room_type_id = rt.room_type_id 
@@ -27,8 +37,8 @@ $query = "SELECT rt.*,
           ORDER BY rt.nightly_rate ASC";
 
 $stmt = $conn->prepare($query);
-$date_check_in = $check_in ?: '9999-12-31';
-$date_check_out = $check_out ?: '9999-12-31';
+$date_check_in = (!empty($check_in) && !empty($check_out)) ? $check_in : '9999-12-31';
+$date_check_out = (!empty($check_in) && !empty($check_out)) ? $check_out : '9999-12-31';
 $stmt->bindValue(1, $date_check_in, SQLITE3_TEXT);
 $stmt->bindValue(2, $date_check_in, SQLITE3_TEXT);
 $stmt->bindValue(3, $date_check_out, SQLITE3_TEXT);
@@ -46,7 +56,34 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
 <div class="container my-5">
     <h1 class="text-center mb-4" style="color: var(--secondary-dark);">Available Room Types</h1>
     
-    <?php if ($check_in && $check_out): ?>
+    <!-- Date Selection Form -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form action="rooms.php" method="GET">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label"><i class="bi bi-calendar-check"></i> Check-in Date</label>
+                        <input type="date" class="form-control" name="check_in" 
+                               value="<?php echo $check_in ?: date('Y-m-d'); ?>" 
+                               min="<?php echo date('Y-m-d'); ?>" required>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label"><i class="bi bi-calendar-x"></i> Check-out Date</label>
+                        <input type="date" class="form-control" name="check_out" 
+                               value="<?php echo $check_out ?: date('Y-m-d', strtotime('+1 day')); ?>" 
+                               min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <?php if (!empty($check_in) && !empty($check_out)): ?>
     <div class="alert alert-info text-center">
         <i class="bi bi-calendar-check"></i> Selected dates: 
         <strong><?php echo date('M d, Y', strtotime($check_in)); ?></strong> to 
@@ -69,7 +106,7 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                     if (!empty($type['image4'])) $images[] = $type['image4'];
                     if (!empty($type['image5'])) $images[] = $type['image5'];
                     
-                    if (empty($images)) {
+                    if (empty($images) && !empty($type['thumbnail'])) {
                         $images[] = $type['thumbnail'];
                     }
                     ?>
@@ -103,21 +140,19 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                             <span class="carousel-control-next-icon"></span>
                         </button>
                     </div>
+                    <?php elseif (count($images) === 1): ?>
+                        <img src="../uploads/room_images/<?php echo htmlspecialchars($images[0]); ?>" 
+                             class="card-img-top" 
+                             alt="<?php echo htmlspecialchars($type['type_name']); ?>"
+                             style="height: 250px; object-fit: cover;">
                     <?php else: ?>
-                        <?php if (!empty($images[0])): ?>
-                            <img src="../uploads/room_images/<?php echo htmlspecialchars($images[0]); ?>" 
-                                 class="card-img-top" 
-                                 alt="<?php echo htmlspecialchars($type['type_name']); ?>"
-                                 style="height: 250px; object-fit: cover;">
-                        <?php else: ?>
-                            <div class="card-img-top d-flex align-items-center justify-content-center" 
-                                 style="height: 250px; background: linear-gradient(135deg, var(--secondary-dark), var(--accent-brown));">
-                                <div class="text-center text-white">
-                                    <i class="bi bi-door-open" style="font-size: 3rem;"></i>
-                                    <p class="mb-0 mt-2 fw-bold"><?php echo htmlspecialchars($type['type_name']); ?></p>
-                                </div>
+                        <div class="card-img-top d-flex align-items-center justify-content-center" 
+                             style="height: 250px; background: linear-gradient(135deg, var(--secondary-dark), var(--accent-brown));">
+                            <div class="text-center text-white">
+                                <i class="bi bi-door-open" style="font-size: 3rem;"></i>
+                                <p class="mb-0 mt-2 fw-bold"><?php echo htmlspecialchars($type['type_name']); ?></p>
                             </div>
-                        <?php endif; ?>
+                        </div>
                     <?php endif; ?>
                     
                     <div class="card-body d-flex flex-column">
@@ -138,7 +173,7 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                             </p>
                             <p class="mb-2">
                                 <i class="bi bi-door-open" style="color: var(--accent-brown);"></i> 
-                                <strong><?php echo $type['available_count']; ?></strong> rooms available
+                                <strong><?php echo $type['available_count']; ?></strong> room(s) available
                             </p>
                             <?php if ($is_available): ?>
                                 <span class="badge bg-success">Available Now</span>
@@ -157,14 +192,26 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                                 </div>
                             </div>
                             <?php if ($is_available): ?>
-                            <a href="book.php?room_type_id=<?php echo $type['room_type_id']; ?>&check_in=<?php echo urlencode($check_in ?: ''); ?>&check_out=<?php echo urlencode($check_out ?: ''); ?>" 
-                               class="btn btn-primary w-100">
+                            <?php 
+                            // Build booking URL with proper date parameters
+                            $booking_url = 'book.php?room_type_id=' . $type['room_type_id'];
+                            if (!empty($check_in)) {
+                                $booking_url .= '&check_in=' . urlencode($check_in);
+                            }
+                            if (!empty($check_out)) {
+                                $booking_url .= '&check_out=' . urlencode($check_out);
+                            }
+                            ?>
+                            <a href="<?php echo $booking_url; ?>" class="btn btn-primary w-100">
                                 <i class="bi bi-calendar-check"></i> Book Now
                             </a>
                             <?php else: ?>
                             <button class="btn btn-secondary w-100" disabled>
                                 <i class="bi bi-x-circle"></i> Not Available
                             </button>
+                            <small class="text-muted d-block mt-2 text-center">
+                                Try selecting different dates
+                            </small>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -175,10 +222,7 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
             <div class="col-12">
                 <div class="alert alert-warning text-center">
                     <i class="bi bi-exclamation-triangle"></i> 
-                    No rooms available for the selected dates. Please try different dates.
-                </div>
-                <div class="text-center">
-                    <a href="rooms.php" class="btn btn-primary">View All Available Rooms</a>
+                    No room types found in the system.
                 </div>
             </div>
         <?php endif; ?>

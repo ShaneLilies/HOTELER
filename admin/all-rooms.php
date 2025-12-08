@@ -9,8 +9,8 @@ $success = $_SESSION['success'] ?? '';
 $error = $_SESSION['error'] ?? '';
 unset($_SESSION['success'], $_SESSION['error']);
 
-// Fetch all rooms with room type information
-$query = "SELECT r.*, rt.type_name, rt.nightly_rate 
+// Fetch all rooms with room type information including thumbnail
+$query = "SELECT r.*, rt.type_name, rt.nightly_rate, rt.thumbnail 
           FROM room r 
           INNER JOIN room_type rt ON r.room_type_id = rt.room_type_id 
           ORDER BY r.room_id DESC";
@@ -61,13 +61,14 @@ $rooms = db_fetch_all($result);
                             <tr>
                                 <td><?php echo $room['room_id']; ?></td>
                                 <td>
-                                    <?php if (!empty($room['image'])): ?>
-                                        <img src="../uploads/room_images/<?php echo htmlspecialchars($room['image']); ?>" 
-                                             alt="Room" 
+                                    <?php if (!empty($room['thumbnail'])): ?>
+                                        <img src="../uploads/room_images/<?php echo htmlspecialchars($room['thumbnail']); ?>" 
+                                             alt="Room Type Thumbnail" 
                                              class="img-thumbnail" 
-                                             style="max-width: 80px; max-height: 60px;">
+                                             style="max-width: 80px; max-height: 60px; object-fit: cover;">
                                     <?php else: ?>
-                                        <div class="bg-secondary text-white text-center" style="width:80px; height:60px; line-height:60px;">
+                                        <div class="bg-secondary text-white text-center d-flex align-items-center justify-content-center" 
+                                             style="width:80px; height:60px;">
                                             <i class="bi bi-image"></i>
                                         </div>
                                     <?php endif; ?>
@@ -98,17 +99,17 @@ $rooms = db_fetch_all($result);
                                 <td>
                                     <a href="edit-room.php?id=<?php echo $room['room_id']; ?>" 
                                        class="btn btn-sm btn-warning btn-action" 
-                                       title="Edit">
+                                       title="Edit Room Details">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <a href="edit-room-type.php?id=<?php echo $room['room_type_id']; ?>" 
                                        class="btn btn-sm btn-info btn-action" 
-                                       title="Manage Images">
+                                       title="Manage Room Type Images">
                                         <i class="bi bi-images"></i>
                                     </a>
                                     <a href="delete-room.php?id=<?php echo $room['room_id']; ?>" 
                                        class="btn btn-sm btn-danger btn-action" 
-                                       title="Delete"
+                                       title="Delete Room"
                                        onclick="return confirm('Are you sure you want to delete this room?')">
                                         <i class="bi bi-trash"></i>
                                     </a>
@@ -123,6 +124,21 @@ $rooms = db_fetch_all($result);
                     </tbody>
                 </table>
             </div>
+            
+            <?php if (!empty($rooms)): ?>
+            <div class="mt-3">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 
+                    <strong>Note:</strong> The image shown is the thumbnail for the room type. 
+                    To manage all images (thumbnail + 5 gallery images), click the blue 
+                    <strong><i class="bi bi-images"></i> Manage Images</strong> button.
+                </div>
+                <p class="text-muted">
+                    <i class="bi bi-info-circle"></i> 
+                    Total Rooms: <strong><?php echo count($rooms); ?></strong>
+                </p>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

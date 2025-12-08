@@ -12,7 +12,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
 }
 
 $error = '';
-$debug_mode = false; // Set to true only for debugging
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = trim($_POST['username']);
@@ -21,16 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($username) || empty($password)) {
         $error = "Please fill in all fields!";
     } else {
-        // Prepare statement
         $stmt = $conn->prepare("SELECT admin_id, username, password FROM admin WHERE username = ?");
         $stmt->bindValue(1, $username, SQLITE3_TEXT);
         $result = $stmt->execute();
         $row = $result->fetchArray(SQLITE3_ASSOC);
         
         if ($row) {
-            // Verify password
             if (password_verify($password, $row['password'])) {
-                // Login successful
                 $_SESSION['admin_logged_in'] = true;
                 $_SESSION['admin_id'] = $row['admin_id'];
                 $_SESSION['admin_username'] = $row['username'];
@@ -39,10 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 exit();
             } else {
                 $error = "Invalid password!";
-                
-                if ($debug_mode) {
-                    $error .= " (Hash: " . substr($row['password'], 0, 20) . "...)";
-                }
             }
         } else {
             $error = "Username not found!";
@@ -57,124 +49,81 @@ $page_title = "Admin Login";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $page_title; ?> - Hotel Management</title>
+    <title><?php echo $page_title; ?> - ZAID HOTEL</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary-dark: #02000d;
+            --secondary-dark: #07203f;
+            --light-cream: #ebded4;
+            --warm-tan: #d9aa90;
+            --accent-brown: #a65e46;
         }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+            background: linear-gradient(135deg, var(--secondary-dark) 0%, var(--primary-dark) 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 20% 50%, rgba(64, 64, 64, 0.3) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 50%, rgba(64, 64, 64, 0.3) 0%, transparent 50%);
-            pointer-events: none;
+            padding: 20px;
         }
         
         .login-container {
-            max-width: 480px;
+            max-width: 450px;
             width: 100%;
-            padding: 20px;
-            position: relative;
-            z-index: 1;
         }
         
         .login-card {
-            background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+            background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         .login-header {
-            background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
-            color: #ffffff;
+            background: linear-gradient(135deg, var(--accent-brown) 0%, var(--warm-tan) 100%);
+            color: white;
             padding: 40px 30px;
             text-align: center;
-            position: relative;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .login-header::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, #666, #999, #666);
-            border-radius: 10px;
+        .logo-container {
+            width: 100px; 
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;      /* Important – clips the image */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;      /* optional background if image has transparency */
         }
+
         
-        .login-header i {
-            font-size: 3.5rem;
-            margin-bottom: 15px;
-            color: #999;
-            text-shadow: 0 0 20px rgba(153, 153, 153, 0.3);
+        .logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;      /* This forces it to fill the container */
         }
-        
-        .login-header h3 {
-            margin: 0;
-            font-size: 1.9rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: #e0e0e0;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-        }
-        
-        .login-header p {
-            margin-top: 8px;
-            color: #999;
-            font-size: 0.95rem;
-            letter-spacing: 0.5px;
-        }
-        
+                
         .login-body {
-            padding: 45px 35px;
-            background: #242424;
+            padding: 40px;
         }
         
         .form-label {
             font-weight: 600;
-            color: #b0b0b0;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-        
-        .form-label i {
-            color: #888;
-            margin-right: 5px;
+            color: var(--secondary-dark);
+            margin-bottom: 8px;
         }
         
         .form-control {
-            background: #1a1a1a;
-            border: 1px solid #3a3a3a;
-            color: #ffffff;
+            background: var(--light-cream);
+            border: 2px solid var(--light-cream);
+            color: var(--primary-dark);
             padding: 14px 18px;
             border-radius: 10px;
             font-size: 1rem;
@@ -182,49 +131,43 @@ $page_title = "Admin Login";
         }
         
         .form-control:focus {
-            background: #1f1f1f;
-            border-color: #666;
-            color: #ffffff;
-            box-shadow: 0 0 0 0.2rem rgba(102, 102, 102, 0.15), 0 0 20px rgba(102, 102, 102, 0.1);
+            background: white;
+            border-color: var(--accent-brown);
+            color: var(--primary-dark);
+            box-shadow: 0 0 0 0.2rem rgba(166, 94, 70, 0.25);
             outline: none;
         }
         
         .form-control::placeholder {
-            color: #555;
+            color: #999;
         }
         
         .btn-login {
-            background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
-            border: 1px solid #4a4a4a;
-            color: #ffffff;
+            background: linear-gradient(135deg, var(--accent-brown) 0%, var(--warm-tan) 100%);
+            border: none;
+            color: white;
             padding: 14px;
             font-size: 1.1rem;
             font-weight: 700;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             transition: all 0.3s ease;
             border-radius: 10px;
-            text-transform: uppercase;
-            position: relative;
-            overflow: hidden;
         }
         
         .btn-login:hover {
-            background: linear-gradient(135deg, #4a4a4a 0%, #3a3a3a 100%);
-            border-color: #666;
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 20px rgba(166, 94, 70, 0.4);
         }
         
         .back-link {
             text-align: center;
-            margin-top: 25px;
+            margin-top: 20px;
         }
         
         .back-link a {
-            color: #999;
+            color: var(--light-cream);
             text-decoration: none;
             font-weight: 500;
-            font-size: 0.95rem;
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
@@ -232,40 +175,29 @@ $page_title = "Admin Login";
         }
         
         .back-link a:hover {
-            color: #ccc;
+            color: var(--warm-tan);
         }
         
         .alert {
             border-radius: 10px;
             border: none;
-            background: linear-gradient(135deg, #3d1f1f 0%, #2d1515 100%);
-            color: #ffcccc;
-            border-left: 4px solid #ff6666;
-            box-shadow: 0 4px 15px rgba(255, 102, 102, 0.2);
-        }
-        
-        .alert i {
-            color: #ff6666;
-        }
-        
-        .btn-close {
-            filter: brightness(0) invert(1);
-            opacity: 0.6;
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border-left: 4px solid #dc3545;
         }
         
         .default-credentials {
-            background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+            background: var(--light-cream);
             padding: 15px;
             border-radius: 10px;
             text-align: center;
             font-size: 0.9rem;
-            color: #888;
+            color: var(--secondary-dark);
             margin-top: 20px;
-            border: 1px solid #3a3a3a;
         }
         
         .default-credentials strong {
-            color: #b0b0b0;
+            color: var(--accent-brown);
         }
     </style>
 </head>
@@ -274,9 +206,11 @@ $page_title = "Admin Login";
 <div class="login-container">
     <div class="login-card">
         <div class="login-header">
-            <i class="bi bi-shield-lock-fill"></i>
+            <div class="logo-container">
+                <img src="../uploads/room_images/zaid-logo.png" alt="ZAID HOTEL">
+            </div>
             <h3>ADMIN ACCESS</h3>
-            <p>Hotel Management System</p>
+            <p class="mb-0 mt-2">Hotel Management System</p>
         </div>
         
         <div class="login-body">
@@ -317,7 +251,7 @@ $page_title = "Admin Login";
                 
                 <div class="d-grid">
                     <button type="submit" class="btn btn-primary btn-lg btn-login">
-                        <i class="bi bi-box-arrow-in-right"></i> Login
+                        <i class="bi bi-box-arrow-in-right"></i> Login to Dashboard
                     </button>
                 </div>
                 

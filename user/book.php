@@ -47,30 +47,49 @@ $tax_rate = 0.12; // 12% tax
 $tax_amount = $room_charge * $tax_rate;
 $total_amount = $room_charge + $tax_amount;
 
-// Check availability
+// FIXED: Check availability - only check for overlapping dates
+// A room is available if:
+// 1. Room status is 'Available' 
+// 2. Room has NO confirmed/occupied reservations that OVERLAP with requested dates
 $avail_stmt = $conn->prepare("
-    SELECT COUNT(*) as available FROM room 
-    WHERE room_type_id = ? 
-    AND status = 'Available'
-    AND room_id NOT IN (
+    SELECT r.room_id, r.room_number, r.floor
+    FROM room r 
+    WHERE r.room_type_id = ? 
+    AND r.status IN ('Available', 'Occupied')
+    AND r.room_id NOT IN (
         SELECT room_id FROM reservation 
         WHERE status IN ('Confirmed', 'Occupied')
-        AND (
-            (check_in_date <= ? AND check_out_date > ?) OR
-            (check_in_date < ? AND check_out_date >= ?) OR
-            (check_in_date >= ? AND check_out_date <= ?)
+        AND NOT (
+            check_out_date <= ? OR check_in_date >= ?
         )
     )
+    LIMIT 1
 ");
 $avail_stmt->bindValue(1, $room_type_id, SQLITE3_INTEGER);
 $avail_stmt->bindValue(2, $check_in, SQLITE3_TEXT);
-$avail_stmt->bindValue(3, $check_in, SQLITE3_TEXT);
-$avail_stmt->bindValue(4, $check_out, SQLITE3_TEXT);
-$avail_stmt->bindValue(5, $check_out, SQLITE3_TEXT);
-$avail_stmt->bindValue(6, $check_in, SQLITE3_TEXT);
-$avail_stmt->bindValue(7, $check_out, SQLITE3_TEXT);
+$avail_stmt->bindValue(3, $check_out, SQLITE3_TEXT);
 $avail_result = $avail_stmt->execute();
-$availability = $avail_result->fetchArray(SQLITE3_ASSOC);
+$available_room = $avail_result->fetchArray(SQLITE3_ASSOC);
+
+// Count total available rooms for this date range
+$count_stmt = $conn->prepare("
+    SELECT COUNT(*) as available_count
+    FROM room r 
+    WHERE r.room_type_id = ? 
+    AND r.status IN ('Available', 'Occupied')
+    AND r.room_id NOT IN (
+        SELECT room_id FROM reservation 
+        WHERE status IN ('Confirmed', 'Occupied')
+        AND NOT (
+            check_out_date <= ? OR check_in_date >= ?
+        )
+    )
+");
+$count_stmt->bindValue(1, $room_type_id, SQLITE3_INTEGER);
+$count_stmt->bindValue(2, $check_in, SQLITE3_TEXT);
+$count_stmt->bindValue(3, $check_out, SQLITE3_TEXT);
+$count_result = $count_stmt->execute();
+$availability = $count_result->fetchArray(SQLITE3_ASSOC);
 
 include 'includes/header.php';
 include 'includes/navbar.php';
@@ -90,9 +109,14 @@ include 'includes/navbar.php';
                         <div class="row">
                             <div class="col-md-8">
                                 <p class="mb-1"><strong>Room Type:</strong> <?php echo htmlspecialchars($room_type['type_name']); ?></p>
-                                <p class="mb-1"><strong>Max Guests:</strong> <?php echo $room_type['max_guests']; ?> persons</p>
+                                <p class="mb-1"><strong>Max Guests:</strong> <?php echo $room_type['max_guests']; ?> person(s)</p>
                                 <p class="mb-1"><strong>Rate per night:</strong> $<?php echo number_format($room_type['nightly_rate'], 2); ?></p>
-                                <p class="mb-1"><strong>Available Rooms:</strong> <?php echo $availability['available']; ?> rooms</p>
+                                <p class="mb-1">
+                                    <strong>Available Rooms for selected dates:</strong> 
+                                    <span class="badge bg-<?php echo $availability['available_count'] > 0 ? 'success' : 'danger'; ?>">
+                                        <?php echo $availability['available_count']; ?> room(s)
+                                    </span>
+                                </p>
                                 <?php if (!empty($room_type['description'])): ?>
                                 <p class="mb-0 mt-2 text-muted small"><?php echo htmlspecialchars($room_type['description']); ?></p>
                                 <?php endif; ?>
@@ -101,7 +125,7 @@ include 'includes/navbar.php';
                                 <?php if (!empty($room_type['thumbnail'])): ?>
                                     <img src="../uploads/room_images/<?php echo htmlspecialchars($room_type['thumbnail']); ?>" 
                                          class="img-thumbnail" 
-                                         style="max-height: 120px;"
+                                         style="max-height: 120px; object-fit: cover;"
                                          alt="<?php echo htmlspecialchars($room_type['type_name']); ?>">
                                 <?php else: ?>
                                     <div class="text-white p-3 rounded" style="background-color: var(--accent-brown);">
@@ -112,14 +136,15 @@ include 'includes/navbar.php';
                         </div>
                     </div>
 
-                    <?php if ($availability['available'] <= 0): ?>
+                    <?php if (!$available_room): ?>
                         <div class="alert alert-danger">
                             <i class="bi bi-exclamation-triangle"></i> 
-                            <strong>Sorry!</strong> No rooms of this type are available for the selected dates.
+                            <strong>Sorry!</strong> No rooms of this type are available for the selected dates 
+                            (<?php echo date('M d, Y', strtotime($check_in)); ?> to <?php echo date('M d, Y', strtotime($check_out)); ?>).
                         </div>
                         <div class="text-center">
                             <a href="rooms.php" class="btn btn-primary">
-                                <i class="bi bi-arrow-left"></i> Back to Room Selection
+                                <i class="bi bi-arrow-left"></i> Try Different Dates
                             </a>
                         </div>
                     <?php else: ?>
@@ -169,7 +194,7 @@ include 'includes/navbar.php';
                                 <label class="form-label"><i class="bi bi-people"></i> Number of Guests *</label>
                                 <input type="number" class="form-control" name="num_guests" 
                                        min="1" max="<?php echo $room_type['max_guests']; ?>" value="1" required>
-                                <small class="text-muted">Maximum: <?php echo $room_type['max_guests']; ?> guests for this room type</small>
+                                <small class="text-muted">Maximum: <?php echo $room_type['max_guests']; ?> guest(s) for this room type</small>
                             </div>
 
                             <div class="mb-4">
@@ -183,8 +208,8 @@ include 'includes/navbar.php';
 
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle"></i> 
-                                <strong>Note:</strong> A room will be automatically assigned to you from the available 
-                                <?php echo htmlspecialchars($room_type['type_name']); ?> rooms upon confirmation.
+                                <strong>Room Assignment:</strong> Room #<?php echo htmlspecialchars($available_room['room_number']); ?> 
+                                (Floor <?php echo htmlspecialchars($available_room['floor']); ?>) will be assigned to you upon confirmation.
                             </div>
 
                             <div class="d-grid gap-2">
