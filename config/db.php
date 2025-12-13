@@ -45,4 +45,7 @@ function db_fetch_all($result) {
     }
     return $rows;
 }
+
+// Include settings (timezone & currency)
+require_once __DIR__ . '/settings.php';
 ?>

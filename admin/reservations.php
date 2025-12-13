@@ -19,6 +19,24 @@ $result = $conn->query($query);
 $reservations = db_fetch_all($result);
 ?>
 
+<style>
+.timestamp-cell {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.timestamp-date {
+    display: block;
+    font-weight: 600;
+    color: var(--secondary-dark);
+}
+
+.timestamp-time {
+    display: block;
+    color: var(--accent-brown);
+}
+</style>
+
 <div class="container-fluid">
     <?php
     $success = $_SESSION['success'] ?? '';
@@ -62,7 +80,7 @@ $reservations = db_fetch_all($result);
                             <th>Guests</th>
                             <th>Total Amount</th>
                             <th>Status</th>
-                            <th>Booked On</th>
+                            <th><i class="bi bi-clock-history"></i> Booked On</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -109,23 +127,36 @@ $reservations = db_fetch_all($result);
                                         <?php echo htmlspecialchars($res['status']); ?>
                                     </span>
                                 </td>
-                                <td><?php echo date('M d, Y', strtotime($res['booking_date'])); ?></td>
+                                <td class="timestamp-cell">
+                                    <?php 
+                                    $booking_time = strtotime($res['booking_date']);
+                                    ?>
+                                    <span class="timestamp-date">
+                                        <i class="bi bi-calendar3"></i> <?php echo date('M d, Y', $booking_time); ?>
+                                    </span>
+                                    <span class="timestamp-time">
+                                        <i class="bi bi-clock"></i> <?php echo date('h:i A', $booking_time); ?>
+                                    </span>
+                                </td>
                                 <td>
                                     <div class="btn-group" role="group">
                                         <?php if ($res['status'] === 'Confirmed'): ?>
                                         <a href="update-reservation.php?id=<?php echo $res['reservation_id']; ?>&status=Completed" 
                                            class="btn btn-sm btn-success"
-                                           onclick="return confirm('Mark as Completed?')">
+                                           onclick="return confirm('Mark as Completed?')"
+                                           title="Mark as Completed">
                                             <i class="bi bi-check-circle"></i>
                                         </a>
                                         <a href="update-reservation.php?id=<?php echo $res['reservation_id']; ?>&status=Cancelled" 
                                            class="btn btn-sm btn-danger"
-                                           onclick="return confirm('Cancel this reservation?')">
+                                           onclick="return confirm('Cancel this reservation?')"
+                                           title="Cancel Reservation">
                                             <i class="bi bi-x-circle"></i>
                                         </a>
                                         <?php endif; ?>
                                         <a href="view-reservation.php?id=<?php echo $res['reservation_id']; ?>" 
-                                           class="btn btn-sm btn-primary">
+                                           class="btn btn-sm btn-primary"
+                                           title="View Details">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                     </div>
@@ -146,6 +177,9 @@ $reservations = db_fetch_all($result);
                 <p class="text-muted">
                     <i class="bi bi-info-circle"></i> 
                     Total Reservations: <strong><?php echo count($reservations); ?></strong>
+                    <span class="ms-3">
+                        <i class="bi bi-clock-history"></i> Sorted by latest bookings first
+                    </span>
                 </p>
             </div>
             <?php endif; ?>

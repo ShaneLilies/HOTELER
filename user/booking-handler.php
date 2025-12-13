@@ -2,15 +2,8 @@
 require_once '../config/db.php';
 session_start();
 
-// Check if user is logged in
-if (!isset($_SESSION['user_logged_in']) || $_SESSION['user_logged_in'] !== true) {
-    header("Location: login.php");
-    exit();
-}
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $room_type_id = intval($_POST['room_type_id']);
-    $guest_id = $_SESSION['user_id'];
     $check_in = $_POST['check_in'];
     $check_out = $_POST['check_out'];
     $num_guests = intval($_POST['num_guests']);
@@ -18,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $room_charge = floatval($_POST['room_charge']);
     $tax_amount = floatval($_POST['tax_amount']);
     $payment_status = $_POST['payment_status'];
+    $is_guest_checkout = isset($_POST['is_guest_checkout']) && $_POST['is_guest_checkout'] == '1';
 
     // Validate inputs
     if (empty($room_type_id) || empty($check_in) || empty($check_out) || empty($num_guests)) {
@@ -33,35 +27,74 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         exit();
     }
 
-    // CRITICAL: Find an available room of this type that's not booked during these dates
+    // Handle guest checkout (create temporary guest account)
+    if ($is_guest_checkout) {
+        $guest_first_name = trim($_POST['guest_first_name']);
+        $guest_last_name = trim($_POST['guest_last_name']);
+        $guest_email = trim($_POST['guest_email']);
+        $guest_phone = trim($_POST['guest_phone']);
+        $guest_address = trim($_POST['guest_address'] ?? '');
+
+        // Validate guest info
+        if (empty($guest_first_name) || empty($guest_last_name) || empty($guest_email) || empty($guest_phone)) {
+            $_SESSION['error'] = "Please fill in all guest information!";
+            header("Location: book.php?room_type_id=" . $room_type_id);
+            exit();
+        }
+
+        // Check if guest email already exists
+        $check_guest = $conn->prepare("SELECT guest_id FROM guest WHERE email = ?");
+        $check_guest->bindValue(1, $guest_email, SQLITE3_TEXT);
+        $check_result = $check_guest->execute();
+        $existing_guest = $check_result->fetchArray(SQLITE3_ASSOC);
+
+        if ($existing_guest) {
+            $guest_id = $existing_guest['guest_id'];
+        } else {
+            // Create guest account with random password
+            $random_password = bin2hex(random_bytes(8));
+            $hashed_password = password_hash($random_password, PASSWORD_DEFAULT);
+
+            $guest_stmt = $conn->prepare("INSERT INTO guest (first_name, last_name, email, phone, address, password) VALUES (?, ?, ?, ?, ?, ?)");
+            $guest_stmt->bindValue(1, $guest_first_name, SQLITE3_TEXT);
+            $guest_stmt->bindValue(2, $guest_last_name, SQLITE3_TEXT);
+            $guest_stmt->bindValue(3, $guest_email, SQLITE3_TEXT);
+            $guest_stmt->bindValue(4, $guest_phone, SQLITE3_TEXT);
+            $guest_stmt->bindValue(5, $guest_address, SQLITE3_TEXT);
+            $guest_stmt->bindValue(6, $hashed_password, SQLITE3_TEXT);
+            $guest_stmt->execute();
+
+            $guest_id = $conn->lastInsertRowID();
+        }
+    } else {
+        // Use logged-in user
+        if (!isset($_SESSION['user_logged_in']) || $_SESSION['user_logged_in'] !== true) {
+            header("Location: login.php");
+            exit();
+        }
+        $guest_id = $_SESSION['user_id'];
+    }
+
+    // Find available room
     $available_room_stmt = $conn->prepare("
         SELECT room_id FROM room 
         WHERE room_type_id = ? 
-        AND status = 'Available'
+        AND status IN ('Available', 'Occupied')
         AND room_id NOT IN (
             SELECT room_id FROM reservation 
             WHERE status IN ('Confirmed', 'Occupied')
-            AND (
-                (check_in_date <= ? AND check_out_date > ?) OR
-                (check_in_date < ? AND check_out_date >= ?) OR
-                (check_in_date >= ? AND check_out_date <= ?)
-            )
+            AND NOT (check_out_date <= ? OR check_in_date >= ?)
         )
         LIMIT 1
     ");
     $available_room_stmt->bindValue(1, $room_type_id, SQLITE3_INTEGER);
     $available_room_stmt->bindValue(2, $check_in, SQLITE3_TEXT);
-    $available_room_stmt->bindValue(3, $check_in, SQLITE3_TEXT);
-    $available_room_stmt->bindValue(4, $check_out, SQLITE3_TEXT);
-    $available_room_stmt->bindValue(5, $check_out, SQLITE3_TEXT);
-    $available_room_stmt->bindValue(6, $check_in, SQLITE3_TEXT);
-    $available_room_stmt->bindValue(7, $check_out, SQLITE3_TEXT);
-    
+    $available_room_stmt->bindValue(3, $check_out, SQLITE3_TEXT);
     $available_result = $available_room_stmt->execute();
     $available_room = $available_result->fetchArray(SQLITE3_ASSOC);
 
     if (!$available_room) {
-        $_SESSION['error'] = "Sorry, no rooms of this type are available for the selected dates!";
+        $_SESSION['error'] = "Sorry, no rooms available for the selected dates!";
         header("Location: rooms.php");
         exit();
     }
@@ -71,32 +104,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Start transaction
     $conn->exec('BEGIN');
 
-
-    $check_stmt = $conn->prepare("
-    SELECT COUNT(*) as count FROM reservation 
-    WHERE room_id = ? 
-    AND status = 'Confirmed' 
-    AND (
-        (check_in_date <= ? AND check_out_date > ?) OR
-        (check_in_date < ? AND check_out_date >= ?) OR
-        (check_in_date >= ? AND check_out_date <= ?)
-        )
-    ");
-    $check_stmt->bindValue(1, $room_id, SQLITE3_INTEGER);
-    $check_stmt->bindValue(2, $check_in, SQLITE3_TEXT);
-    $check_stmt->bindValue(3, $check_in, SQLITE3_TEXT);
-    $check_stmt->bindValue(4, $check_out, SQLITE3_TEXT);
-    $check_stmt->bindValue(5, $check_out, SQLITE3_TEXT);
-    $check_stmt->bindValue(6, $check_in, SQLITE3_TEXT);
-    $check_stmt->bindValue(7, $check_out, SQLITE3_TEXT);
-    $check_result = $check_stmt->execute();
-    $check_row = $check_result->fetchArray(SQLITE3_ASSOC);
-
-    if ($check_row['count'] > 0) {
-        $_SESSION['error'] = "This room is already booked for the selected dates!";
-        header("Location: book.php?room_id=" . $room_id);
-        exit();
-    }
     try {
         // Insert reservation
         $res_stmt = $conn->prepare("INSERT INTO reservation (guest_id, room_id, check_in_date, check_out_date, num_guests, total_amount, status) 
@@ -121,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $bill_stmt->bindValue(5, $payment_status, SQLITE3_TEXT);
         $bill_stmt->execute();
         
-        // If payment is already made, mark room as Occupied
+        // If payment is made, mark room as Occupied
         if ($payment_status === 'Paid') {
             $update_stmt = $conn->prepare("UPDATE room SET status = 'Occupied' WHERE room_id = ?");
             $update_stmt->bindValue(1, $room_id, SQLITE3_INTEGER);
@@ -131,14 +138,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Commit transaction
         $conn->exec('COMMIT');
         
-        // Get room details for confirmation
-        $room_stmt = $conn->prepare("SELECT r.room_number, r.floor, rt.type_name, rt.nightly_rate 
+        // Get room details
+        $room_stmt = $conn->prepare("SELECT r.room_number, r.floor, rt.type_name 
                                      FROM room r 
                                      INNER JOIN room_type rt ON r.room_type_id = rt.room_type_id 
                                      WHERE r.room_id = ?");
         $room_stmt->bindValue(1, $room_id, SQLITE3_INTEGER);
         $room_result = $room_stmt->execute();
         $room = $room_result->fetchArray(SQLITE3_ASSOC);
+
+        // Get guest details
+        $guest_stmt = $conn->prepare("SELECT first_name, last_name, email FROM guest WHERE guest_id = ?");
+        $guest_stmt->bindValue(1, $guest_id, SQLITE3_INTEGER);
+        $guest_result = $guest_stmt->execute();
+        $guest = $guest_result->fetchArray(SQLITE3_ASSOC);
         
         $page_title = "Booking Successful - ZAID HOTEL";
         include 'includes/header.php';
@@ -162,8 +175,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <div class="row">
                                         <div class="col-md-6">
                                             <p><strong>Reservation ID:</strong> #<?php echo str_pad($reservation_id, 6, '0', STR_PAD_LEFT); ?></p>
-                                            <p><strong>Guest Name:</strong> <?php echo htmlspecialchars($_SESSION['user_name']); ?></p>
-                                            <p><strong>Email:</strong> <?php echo htmlspecialchars($_SESSION['user_email']); ?></p>
+                                            <p><strong>Guest Name:</strong> <?php echo htmlspecialchars($guest['first_name'] . ' ' . $guest['last_name']); ?></p>
+                                            <p><strong>Email:</strong> <?php echo htmlspecialchars($guest['email']); ?></p>
                                             <p><strong>Room Type:</strong> <?php echo htmlspecialchars($room['type_name']); ?></p>
                                             <p><strong>Room Number:</strong> <?php echo htmlspecialchars($room['room_number']); ?></p>
                                         </div>
@@ -171,9 +184,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                             <p><strong>Floor:</strong> <?php echo htmlspecialchars($room['floor']); ?></p>
                                             <p><strong>Check-in:</strong> <?php echo date('M d, Y', strtotime($check_in)); ?></p>
                                             <p><strong>Check-out:</strong> <?php echo date('M d, Y', strtotime($check_out)); ?></p>
-                                            <p><strong>Number of Guests:</strong> <?php echo $num_guests; ?></p>
-                                            <p><strong>Total Amount:</strong> $<?php echo number_format($total_amount, 2); ?></p>
-                                            <p><strong>Payment Status:</strong> 
+                                            <p><strong>Guests:</strong> <?php echo $num_guests; ?></p>
+                                            <p><strong>Total:</strong> $<?php echo number_format($total_amount, 2); ?></p>
+                                            <p><strong>Payment:</strong> 
                                                 <span class="badge bg-<?php echo $payment_status === 'Paid' ? 'success' : 'warning'; ?>">
                                                     <?php echo $payment_status; ?>
                                                 </span>
@@ -183,12 +196,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 </div>
                             </div>
                             
+                            <?php if ($is_guest_checkout): ?>
                             <div class="alert alert-info">
-                                <i class="bi bi-info-circle"></i> Your reservation has been recorded. You can view it anytime in your reservations page.
+                                <i class="bi bi-info-circle"></i> 
+                                <strong>Guest Booking:</strong> A confirmation has been sent to <?php echo htmlspecialchars($guest['email']); ?>. 
+                                You can show your reservation ID at check-in.
                             </div>
+                            <?php else: ?>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> 
+                                Your reservation is saved. View it anytime in your reservations page.
+                            </div>
+                            <?php endif; ?>
                             
                             <div class="d-grid gap-2 col-md-8 mx-auto">
+                                <?php if (!$is_guest_checkout): ?>
                                 <a href="my-reservations.php" class="btn btn-primary btn-lg">View My Reservations</a>
+                                <?php endif; ?>
                                 <a href="index.php" class="btn btn-outline-primary">Back to Home</a>
                             </div>
                         </div>
@@ -201,7 +225,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         include 'includes/footer.php';
         
     } catch (Exception $e) {
-        // Rollback on error
         $conn->exec('ROLLBACK');
         $_SESSION['error'] = "Booking failed: " . $e->getMessage();
         header("Location: rooms.php");

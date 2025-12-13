@@ -1,5 +1,6 @@
 <?php
 require_once '../config/db.php';
+require_once '../config/settings.php';
 session_start();
 
 // Check if user is logged in
@@ -82,9 +83,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     }
 }
 
-// Get user statistics
+// Get user statistics - FIXED: Specify table alias for total_amount
 $total_reservations = $conn->querySingle("SELECT COUNT(*) FROM reservation WHERE guest_id = $guest_id");
-$total_spent = $conn->querySingle("SELECT SUM(total_amount) FROM billing b INNER JOIN reservation r ON b.reservation_id = r.reservation_id WHERE r.guest_id = $guest_id AND b.payment_status = 'Paid'");
+$total_spent = $conn->querySingle("
+    SELECT SUM(b.total_amount) 
+    FROM billing b 
+    INNER JOIN reservation r ON b.reservation_id = r.reservation_id 
+    WHERE r.guest_id = $guest_id AND b.payment_status = 'Paid'
+");
 $total_spent = $total_spent ? $total_spent : 0;
 ?>
 
@@ -110,7 +116,7 @@ $total_spent = $total_spent ? $total_spent : 0;
                             <small class="text-muted">Total Bookings</small>
                         </div>
                         <div class="col-6">
-                            <h5 style="color: var(--accent-brown);">$<?php echo number_format($total_spent, 2); ?></h5>
+                            <h5 style="color: var(--accent-brown);"><?php echo format_currency($total_spent); ?></h5>
                             <small class="text-muted">Total Spent</small>
                         </div>
                     </div>

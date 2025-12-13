@@ -35,6 +35,19 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
 }
 ?>
 
+<style>
+.timestamp-badge {
+    background: var(--light-cream);
+    color: var(--secondary-dark);
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+</style>
+
 <div class="container my-5">
     <div class="row">
         <div class="col-12">
@@ -145,10 +158,17 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                                         </div>
                                     </div>
                                     
-                                    <small class="text-muted">
-                                        <i class="bi bi-clock"></i> Booked on: 
-                                        <?php echo date('M d, Y h:i A', strtotime($reservation['booking_date'])); ?>
-                                    </small>
+                                    <!-- TIMESTAMP -->
+                                    <div class="mb-3">
+                                        <span class="timestamp-badge">
+                                            <i class="bi bi-clock-history"></i>
+                                            <strong>Booked:</strong> 
+                                            <?php 
+                                            $booking_time = strtotime($reservation['booking_date']);
+                                            echo date('M d, Y', $booking_time) . ' at ' . date('h:i A', $booking_time); 
+                                            ?>
+                                        </span>
+                                    </div>
                                     
                                     <div class="mt-3">
                                         <?php if ($reservation['status'] === 'Confirmed' && $reservation['payment_status'] === 'Pending'): ?>

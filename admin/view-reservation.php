@@ -38,6 +38,26 @@ if (!$reservation) {
 $nights = (strtotime($reservation['check_out_date']) - strtotime($reservation['check_in_date'])) / (60 * 60 * 24);
 ?>
 
+<style>
+.timestamp-highlight {
+    background: linear-gradient(135deg, var(--light-cream), var(--warm-tan));
+    padding: 15px 20px;
+    border-radius: 10px;
+    border-left: 4px solid var(--accent-brown);
+    margin-bottom: 20px;
+}
+
+.timestamp-highlight strong {
+    color: var(--secondary-dark);
+}
+
+.timestamp-highlight .time-value {
+    color: var(--accent-brown);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+</style>
+
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 style="color: var(--secondary-dark);">
@@ -46,6 +66,24 @@ $nights = (strtotime($reservation['check_out_date']) - strtotime($reservation['c
         <a href="reservations.php" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> Back to List
         </a>
+    </div>
+
+    <!-- TIMESTAMP HIGHLIGHT -->
+    <div class="timestamp-highlight">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <i class="bi bi-clock-history" style="font-size: 1.5rem; color: var(--accent-brown);"></i>
+                <strong>Booking Timestamp:</strong>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <span class="time-value">
+                    <?php 
+                    $booking_time = strtotime($reservation['booking_date']);
+                    echo date('F d, Y', $booking_time) . ' at ' . date('h:i:s A', $booking_time); 
+                    ?>
+                </span>
+            </div>
+        </div>
     </div>
 
     <div class="row">
@@ -77,7 +115,11 @@ $nights = (strtotime($reservation['check_out_date']) - strtotime($reservation['c
                         </tr>
                         <tr>
                             <td><strong>Booking Date:</strong></td>
-                            <td><?php echo date('M d, Y h:i A', strtotime($reservation['booking_date'])); ?></td>
+                            <td><?php echo date('M d, Y', $booking_time); ?></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Booking Time:</strong></td>
+                            <td><?php echo date('h:i:s A', $booking_time); ?></td>
                         </tr>
                         <tr>
                             <td><strong>Check-in:</strong></td>

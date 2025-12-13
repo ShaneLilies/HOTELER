@@ -93,23 +93,35 @@ $page_title = "Admin Login";
         }
         
         .logo-container {
-            width: 100px; 
-            height: 100px;
+            width: 90px;
+            height: 90px;
+            background: white;
             border-radius: 50%;
-            overflow: hidden;      /* Important – clips the image */
+            margin: 0 auto 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #000;      /* optional background if image has transparency */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-
         
         .logo-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;      /* This forces it to fill the container */
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
         }
-                
+        
+        .login-header h3 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .login-header p {
+            margin: 8px 0 0 0;
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+        
         .login-body {
             padding: 40px;
         }
@@ -210,7 +222,7 @@ $page_title = "Admin Login";
                 <img src="../uploads/room_images/zaid-logo.png" alt="ZAID HOTEL">
             </div>
             <h3>ADMIN ACCESS</h3>
-            <p class="mb-0 mt-2">Hotel Management System</p>
+            <p>Hotel Management System</p>
         </div>
         
         <div class="login-body">

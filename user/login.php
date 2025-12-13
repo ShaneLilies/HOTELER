@@ -53,27 +53,36 @@ $page_title = "Login / Register";
             color: white;
             padding: 40px 30px;
             text-align: center;
-            display: flex;
-            justify-content: center; 
-            align-items: center;
         }
         
         .logo-container {
-            width: 100px; 
-            height: 100px;
+            width: 90px;
+            height: 90px;
+            background: white;
             border-radius: 50%;
-            overflow: hidden;      /* Important – clips the image */
+            margin: 0 auto 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-
         
         .logo-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;      /* This forces it to fill the container */
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+        }
+        
+        .auth-header h3 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .auth-header p {
+            margin: 8px 0 0 0;
+            opacity: 0.9;
+            font-size: 1rem;
         }
         
         .auth-body {
@@ -173,8 +182,8 @@ $page_title = "Login / Register";
             <div class="logo-container">
                 <img src="../uploads/room_images/zaid-logo.png" alt="ZAID HOTEL">
             </div>
-            <h3 class="mb-0">ZAID HOTEL</h3>
-            <p class="mb-0 mt-2">Guest Portal</p>
+            <h3>ZAID HOTEL</h3>
+            <p>Guest Portal</p>
         </div>
         
         <div class="auth-body">

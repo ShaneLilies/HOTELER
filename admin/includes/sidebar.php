@@ -4,16 +4,23 @@ $current_page = basename($_SERVER['PHP_SELF']);
 <div class="wrapper">
     <nav id="sidebar">
         <div class="sidebar-header">
-            <div class="d-flex align-items-center mb-3">
-                <img src="../uploads/room_images/zaid-logo.png" 
-                     alt="ZAID HOTEL" 
-                     style="height: 50px; width: 50px; object-fit: contain; margin-right: 10px; filter: brightness(0) invert(1);">
-                <h3 class="mb-0"><i class="bi bi-building"></i> Hotel Admin</h3>
+            <div class="text-center mb-3">
+                <div style="width: 60px; height: 60px; background: white; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                    <img src="../uploads/room_images/zaid-logo.png" 
+                         alt="ZAID HOTEL" 
+                         style="width: 45px; height: 45px; object-fit: contain;">
+                </div>
+                <h4 class="mb-1" style="font-weight: 700;">ZAID HOTEL</h4>
+                <p class="mb-0 small">Admin Panel</p>
             </div>
-            <p class="mb-0">Welcome, <?php echo htmlspecialchars($_SESSION['admin_username']); ?></p>
+            <hr style="border-color: rgba(255,255,255,0.2); margin: 20px 0;">
+            <p class="mb-0 text-center">
+                <i class="bi bi-person-circle"></i> 
+                <?php echo htmlspecialchars($_SESSION['admin_username']); ?>
+            </p>
         </div>
 
-        <ul class="list-unstyled components">
+        <ul class="list-unstyled components" style="overflow-y: visible; max-height: none;">
             <li>
                 <a href="dashboard.php" class="<?php echo $current_page == 'dashboard.php' ? 'active' : ''; ?>">
                     <i class="bi bi-speedometer2"></i> Dashboard
