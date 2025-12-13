@@ -7,6 +7,8 @@ include 'includes/navbar.php';
 // Get check-in and check-out dates from URL
 $check_in = $_GET['check_in'] ?? '';
 $check_out = $_GET['check_out'] ?? '';
+$check_in_time = $_GET['check_in_time'] ?? '14:00';
+$check_out_time = $_GET['check_out_time'] ?? '12:00';
 
 // Validate dates
 if (!empty($check_in) && !empty($check_out)) {
@@ -17,6 +19,10 @@ if (!empty($check_in) && !empty($check_out)) {
         $check_out = date('Y-m-d', strtotime($check_in . ' +1 day'));
     }
 }
+
+// Combine date and time for queries
+$check_in_datetime = !empty($check_in) ? $check_in . ' ' . $check_in_time . ':00' : '9999-12-31 00:00:00';
+$check_out_datetime = !empty($check_out) ? $check_out . ' ' . $check_out_time . ':00' : '9999-12-31 23:59:59';
 
 // Fetch ALL room types with availability count
 $query = "SELECT rt.*, 
@@ -37,14 +43,12 @@ $query = "SELECT rt.*,
           ORDER BY rt.nightly_rate ASC";
 
 $stmt = $conn->prepare($query);
-$date_check_in = (!empty($check_in) && !empty($check_out)) ? $check_in : '9999-12-31';
-$date_check_out = (!empty($check_in) && !empty($check_out)) ? $check_out : '9999-12-31';
-$stmt->bindValue(1, $date_check_in, SQLITE3_TEXT);
-$stmt->bindValue(2, $date_check_in, SQLITE3_TEXT);
-$stmt->bindValue(3, $date_check_out, SQLITE3_TEXT);
-$stmt->bindValue(4, $date_check_out, SQLITE3_TEXT);
-$stmt->bindValue(5, $date_check_in, SQLITE3_TEXT);
-$stmt->bindValue(6, $date_check_out, SQLITE3_TEXT);
+$stmt->bindValue(1, $check_in_datetime, SQLITE3_TEXT);
+$stmt->bindValue(2, $check_in_datetime, SQLITE3_TEXT);
+$stmt->bindValue(3, $check_out_datetime, SQLITE3_TEXT);
+$stmt->bindValue(4, $check_out_datetime, SQLITE3_TEXT);
+$stmt->bindValue(5, $check_in_datetime, SQLITE3_TEXT);
+$stmt->bindValue(6, $check_out_datetime, SQLITE3_TEXT);
 
 $result = $stmt->execute();
 $room_types = [];
@@ -53,10 +57,38 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
 }
 ?>
 
+<style>
+.time-selector {
+    background: var(--light-cream);
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 5px;
+}
+
+.time-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.time-input-wrapper label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--secondary-dark);
+    margin: 0;
+}
+
+.time-input-wrapper input[type="time"] {
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    padding: 5px 10px;
+}
+</style>
+
 <div class="container my-5">
     <h1 class="text-center mb-4" style="color: var(--secondary-dark);">Available Room Types</h1>
     
-    <!-- Date Selection Form -->
+    <!-- Date & Time Selection Form -->
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
             <form action="rooms.php" method="GET">
@@ -66,12 +98,28 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                         <input type="date" class="form-control" name="check_in" 
                                value="<?php echo $check_in ?: date('Y-m-d'); ?>" 
                                min="<?php echo date('Y-m-d'); ?>" required>
+                        <div class="time-selector">
+                            <div class="time-input-wrapper">
+                                <label><i class="bi bi-clock"></i> Time:</label>
+                                <input type="time" class="form-control-sm" name="check_in_time" 
+                                       value="<?php echo $check_in_time; ?>">
+                                <small class="text-muted">(Default: 2:00 PM)</small>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-5">
                         <label class="form-label"><i class="bi bi-calendar-x"></i> Check-out Date</label>
                         <input type="date" class="form-control" name="check_out" 
                                value="<?php echo $check_out ?: date('Y-m-d', strtotime('+1 day')); ?>" 
                                min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" required>
+                        <div class="time-selector">
+                            <div class="time-input-wrapper">
+                                <label><i class="bi bi-clock"></i> Time:</label>
+                                <input type="time" class="form-control-sm" name="check_out_time" 
+                                       value="<?php echo $check_out_time; ?>">
+                                <small class="text-muted">(Default: 12:00 PM)</small>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-primary w-100">
@@ -85,9 +133,9 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
     
     <?php if (!empty($check_in) && !empty($check_out)): ?>
     <div class="alert alert-info text-center">
-        <i class="bi bi-calendar-check"></i> Selected dates: 
-        <strong><?php echo date('M d, Y', strtotime($check_in)); ?></strong> to 
-        <strong><?php echo date('M d, Y', strtotime($check_out)); ?></strong>
+        <i class="bi bi-calendar-check"></i> Selected: 
+        <strong><?php echo date('M d, Y', strtotime($check_in)); ?> at <?php echo date('h:i A', strtotime($check_in_time)); ?></strong> to 
+        <strong><?php echo date('M d, Y', strtotime($check_out)); ?> at <?php echo date('h:i A', strtotime($check_out_time)); ?></strong>
     </div>
     <?php endif; ?>
 
@@ -186,20 +234,22 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div>
                                     <h4 class="mb-0" style="color: var(--accent-brown);">
-                                        $<?php echo number_format($type['nightly_rate'], 2); ?>
+                                        ₱<?php echo number_format($type['nightly_rate'], 2); ?>
                                     </h4>
                                     <small class="text-muted">per night</small>
                                 </div>
                             </div>
                             <?php if ($is_available): ?>
                             <?php 
-                            // Build booking URL with proper date parameters
+                            // Build booking URL with dates AND times
                             $booking_url = 'book.php?room_type_id=' . $type['room_type_id'];
                             if (!empty($check_in)) {
                                 $booking_url .= '&check_in=' . urlencode($check_in);
+                                $booking_url .= '&check_in_time=' . urlencode($check_in_time);
                             }
                             if (!empty($check_out)) {
                                 $booking_url .= '&check_out=' . urlencode($check_out);
+                                $booking_url .= '&check_out_time=' . urlencode($check_out_time);
                             }
                             ?>
                             <a href="<?php echo $booking_url; ?>" class="btn btn-primary w-100">
@@ -210,7 +260,7 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                                 <i class="bi bi-x-circle"></i> Not Available
                             </button>
                             <small class="text-muted d-block mt-2 text-center">
-                                Try selecting different dates
+                                Try selecting different dates/times
                             </small>
                             <?php endif; ?>
                         </div>

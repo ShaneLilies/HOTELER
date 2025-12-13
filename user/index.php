@@ -172,7 +172,7 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                         <i class="bi bi-people-fill"></i> Up to <?php echo $room['max_guests']; ?> guests
                     </p>
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="featured-card-price">$<?php echo number_format($room['nightly_rate'], 2); ?></span>
+                        <span class="featured-card-price">₱<?php echo number_format($room['nightly_rate'], 2); ?></span>
                         <small style="color: var(--light-cream);">per night</small>
                     </div>
                 </div>
@@ -290,7 +290,7 @@ function openRoomModal(room) {
     document.getElementById('roomModalDetails').innerHTML = `
         <div class="row mb-4">
             <div class="col-md-6">
-                <h3 style="color: var(--accent-brown);">$${parseFloat(room.nightly_rate).toFixed(2)} 
+                <h3 style="color: var(--accent-brown);">₱${parseFloat(room.nightly_rate).toFixed(2)} 
                     <small class="text-muted" style="font-size: 1rem;">per night</small>
                 </h3>
             </div>

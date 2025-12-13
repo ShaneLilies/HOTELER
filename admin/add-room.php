@@ -44,6 +44,105 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 ?>
 
+<style>
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--secondary-dark), var(--accent-brown));
+    color: white;
+    border: none;
+    padding: 25px;
+}
+
+.card-body {
+    padding: 30px;
+}
+
+.form-label {
+    color: var(--secondary-dark);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.form-control, .form-select {
+    border: 2px solid var(--light-cream);
+    border-radius: 10px;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--accent-brown);
+    box-shadow: 0 0 0 0.2rem rgba(166, 94, 70, 0.25);
+}
+
+.btn {
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-brown), var(--warm-tan));
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(166, 94, 70, 0.4);
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+.alert {
+    border: none;
+    border-radius: 10px;
+    border-left: 4px solid;
+    padding: 15px 20px;
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-left-color: #28a745;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-left-color: #dc3545;
+    color: #721c24;
+}
+
+.alert-info {
+    background-color: rgba(7, 32, 63, 0.1);
+    border-left-color: var(--secondary-dark);
+    color: var(--secondary-dark);
+}
+
+.form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.room-type-option {
+    padding: 5px 0;
+}
+</style>
+
 <div class="container-fluid">
     <div class="row justify-content-center">
         <div class="col-lg-8">
@@ -69,52 +168,72 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <form method="POST">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Room Number *</label>
+                                <label class="form-label">
+                                    <i class="bi bi-door-closed"></i> Room Number *
+                                </label>
                                 <input type="text" class="form-control" name="room_number" 
-                                       value="<?php echo $_POST['room_number'] ?? ''; ?>" required>
-                                <small class="text-muted">Example: 101, 202, etc.</small>
+                                       value="<?php echo $_POST['room_number'] ?? ''; ?>" 
+                                       placeholder="e.g., 101, 202, 303"
+                                       required>
+                                <small class="form-text">Enter a unique room number</small>
                             </div>
                             
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Room Type *</label>
+                                <label class="form-label">
+                                    <i class="bi bi-house-door"></i> Room Type *
+                                </label>
                                 <select class="form-select" name="room_type_id" required>
                                     <option value="">Select Room Type</option>
                                     <?php foreach ($room_types as $type): ?>
                                         <option value="<?php echo $type['room_type_id']; ?>"
                                                 <?php echo (isset($_POST['room_type_id']) && $_POST['room_type_id'] == $type['room_type_id']) ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($type['type_name']); ?> - $<?php echo number_format($type['nightly_rate'], 2); ?>/night
+                                            <?php echo htmlspecialchars($type['type_name']); ?> - ₱<?php echo number_format($type['nightly_rate'], 2); ?>/night
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
+                                <small class="form-text">Choose the category of this room</small>
                             </div>
                         </div>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Floor *</label>
+                                <label class="form-label">
+                                    <i class="bi bi-building"></i> Floor *
+                                </label>
                                 <input type="text" class="form-control" name="floor" 
-                                       value="<?php echo $_POST['floor'] ?? ''; ?>" required>
-                                <small class="text-muted">Example: 1, 2, G, etc.</small>
+                                       value="<?php echo $_POST['floor'] ?? ''; ?>" 
+                                       placeholder="e.g., 1, 2, G"
+                                       required>
+                                <small class="form-text">Specify the floor location</small>
                             </div>
                             
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Status *</label>
+                                <label class="form-label">
+                                    <i class="bi bi-info-circle"></i> Status *
+                                </label>
                                 <select class="form-select" name="status" required>
-                                    <option value="Available" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Available') ? 'selected' : ''; ?>>Available</option>
-                                    <option value="Occupied" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Occupied') ? 'selected' : ''; ?>>Occupied</option>
-                                    <option value="Maintenance" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Maintenance') ? 'selected' : ''; ?>>Maintenance</option>
+                                    <option value="Available" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Available') ? 'selected' : ''; ?>>
+                                        Available
+                                    </option>
+                                    <option value="Occupied" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Occupied') ? 'selected' : ''; ?>>
+                                        Occupied
+                                    </option>
+                                    <option value="Maintenance" <?php echo (isset($_POST['status']) && $_POST['status'] == 'Maintenance') ? 'selected' : ''; ?>>
+                                        Maintenance
+                                    </option>
                                 </select>
+                                <small class="form-text">Current availability status</small>
                             </div>
                         </div>
                         
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle"></i> 
-                            <strong>Note:</strong> Room images are managed per room type, not per individual room. 
+                            <strong>Image Management:</strong> Room images are managed per room type, not per individual room. 
                             After adding a room, you can manage the images for its room type using the 
                             <strong>Manage Images</strong> button in the All Rooms page.
                         </div>
                         
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                             <a href="all-rooms.php" class="btn btn-secondary">
                                 <i class="bi bi-x-circle"></i> Cancel
                             </a>
