@@ -121,11 +121,11 @@ $nights = (strtotime($bill['check_out_date']) - strtotime($bill['check_in_date']
                             <table class="table table-sm table-borderless">
                                 <tr>
                                     <td><strong>Check-in Date:</strong></td>
-                                    <td><?php echo date('F d, Y', strtotime($bill['check_in_date'])); ?></td>
+                                    <td><?php echo date('F d, Y h:i A', strtotime($bill['check_in_date'])); ?></td>
                                 </tr>
                                 <tr>
                                     <td><strong>Check-out Date:</strong></td>
-                                    <td><?php echo date('F d, Y', strtotime($bill['check_out_date'])); ?></td>
+                                    <td><?php echo date('F d, Y h:i A', strtotime($bill['check_out_date'])); ?></td>
                                 </tr>
                                 <tr>
                                     <td><strong>Number of Nights:</strong></td>
@@ -155,21 +155,21 @@ $nights = (strtotime($bill['check_out_date']) - strtotime($bill['check_in_date']
                         <tbody>
                             <tr>
                                 <td><?php echo htmlspecialchars($bill['type_name']); ?> - Room <?php echo htmlspecialchars($bill['room_number']); ?></td>
-                                <td class="text-center">$<?php echo number_format($bill['nightly_rate'], 2); ?></td>
+                                <td class="text-center">₱<?php echo number_format($bill['nightly_rate'], 2); ?></td>
                                 <td class="text-center"><?php echo $nights; ?></td>
-                                <td class="text-end">$<?php echo number_format($bill['room_charge'], 2); ?></td>
+                                <td class="text-end">₱<?php echo number_format($bill['room_charge'], 2); ?></td>
                             </tr>
                             <tr>
                                 <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
-                                <td class="text-end">$<?php echo number_format($bill['room_charge'], 2); ?></td>
+                                <td class="text-end">₱<?php echo number_format($bill['room_charge'], 2); ?></td>
                             </tr>
                             <tr>
                                 <td colspan="3" class="text-end"><strong>Tax (12%):</strong></td>
-                                <td class="text-end">$<?php echo number_format($bill['tax_amount'], 2); ?></td>
+                                <td class="text-end">₱<?php echo number_format($bill['tax_amount'], 2); ?></td>
                             </tr>
                             <tr style="background-color: var(--warm-tan); font-size: 1.1rem;">
                                 <td colspan="3" class="text-end"><strong>TOTAL AMOUNT:</strong></td>
-                                <td class="text-end"><strong>$<?php echo number_format($bill['total_amount'], 2); ?></strong></td>
+                                <td class="text-end"><strong>₱<?php echo number_format($bill['total_amount'], 2); ?></strong></td>
                             </tr>
                         </tbody>
                     </table>

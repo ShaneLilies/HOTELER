@@ -213,8 +213,14 @@ foreach ($billings as $bill) {
                                         <?php echo htmlspecialchars($bill['type_name'] . ' - ' . $bill['room_number']); ?>
                                     </span>
                                 </td>
-                                <td><?php echo date('M d, Y', strtotime($bill['check_in_date'])); ?></td>
-                                <td><?php echo date('M d, Y', strtotime($bill['check_out_date'])); ?></td>
+                                <td>
+                                    <?php echo date('M d, Y', strtotime($bill['check_in_date'])); ?><br>
+                                    <small class="text-muted"><?php echo date('h:i A', strtotime($bill['check_in_date'])); ?></small>
+                                </td>
+                                <td>
+                                    <?php echo date('M d, Y', strtotime($bill['check_out_date'])); ?><br>
+                                    <small class="text-muted"><?php echo date('h:i A', strtotime($bill['check_out_date'])); ?></small>
+                                </td>
                                 <td>₱<?php echo number_format($bill['room_charge'], 2); ?></td>
                                 <td>₱<?php echo number_format($bill['tax_amount'], 2); ?></td>
                                 <td><strong>₱<?php echo number_format($bill['total_amount'], 2); ?></strong></td>

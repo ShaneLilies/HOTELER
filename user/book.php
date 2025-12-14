@@ -12,6 +12,8 @@ $page_title = "Book Room - ZAID HOTEL";
 $room_type_id = intval($_GET['room_type_id']);
 $check_in = $_GET['check_in'] ?? date('Y-m-d');
 $check_out = $_GET['check_out'] ?? date('Y-m-d', strtotime('+1 day'));
+$check_in_time = $_GET['check_in_time'] ?? '14:00';
+$check_out_time = $_GET['check_out_time'] ?? '12:00';
 
 // Check if user is logged in
 $is_logged_in = isset($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true;
@@ -130,7 +132,7 @@ include 'includes/navbar.php';
                             <div class="col-md-8">
                                 <p class="mb-1"><strong>Room Type:</strong> <?php echo htmlspecialchars($room_type['type_name']); ?></p>
                                 <p class="mb-1"><strong>Max Guests:</strong> <?php echo $room_type['max_guests']; ?> person(s)</p>
-                                <p class="mb-1"><strong>Rate per night:</strong> $<?php echo number_format($room_type['nightly_rate'], 2); ?></p>
+                                <p class="mb-1"><strong>Rate per night:</strong> ₱<?php echo number_format($room_type['nightly_rate'], 2); ?></p>
                                 <p class="mb-1">
                                     <strong>Available:</strong> 
                                     <span class="badge bg-<?php echo $availability['available_count'] > 0 ? 'success' : 'danger'; ?>">
@@ -169,11 +171,11 @@ include 'includes/navbar.php';
                                 <table class="table table-sm">
                                     <tr>
                                         <td>Check-in:</td>
-                                        <td class="text-end"><strong><?php echo date('M d, Y', strtotime($check_in)); ?></strong></td>
+                                        <td class="text-end"><strong><?php echo date('M d, Y h:i A', strtotime($check_in . ' ' . $check_in_time)); ?></strong></td>
                                     </tr>
                                     <tr>
                                         <td>Check-out:</td>
-                                        <td class="text-end"><strong><?php echo date('M d, Y', strtotime($check_out)); ?></strong></td>
+                                        <td class="text-end"><strong><?php echo date('M d, Y h:i A', strtotime($check_out . ' ' . $check_out_time)); ?></strong></td>
                                     </tr>
                                     <tr>
                                         <td>Nights:</td>
@@ -181,15 +183,15 @@ include 'includes/navbar.php';
                                     </tr>
                                     <tr>
                                         <td>Room Charge:</td>
-                                        <td class="text-end">$<?php echo number_format($room_charge, 2); ?></td>
+                                        <td class="text-end">₱<?php echo number_format($room_charge, 2); ?></td>
                                     </tr>
                                     <tr>
                                         <td>Tax (12%):</td>
-                                        <td class="text-end">$<?php echo number_format($tax_amount, 2); ?></td>
+                                        <td class="text-end">₱<?php echo number_format($tax_amount, 2); ?></td>
                                     </tr>
                                     <tr style="background-color: var(--warm-tan);">
                                         <td><strong>Total:</strong></td>
-                                        <td class="text-end"><strong>$<?php echo number_format($total_amount, 2); ?></strong></td>
+                                        <td class="text-end"><strong>₱<?php echo number_format($total_amount, 2); ?></strong></td>
                                     </tr>
                                 </table>
                             </div>
@@ -200,6 +202,8 @@ include 'includes/navbar.php';
                             <input type="hidden" name="room_type_id" value="<?php echo $room_type['room_type_id']; ?>">
                             <input type="hidden" name="check_in" value="<?php echo htmlspecialchars($check_in); ?>">
                             <input type="hidden" name="check_out" value="<?php echo htmlspecialchars($check_out); ?>">
+                            <input type="hidden" name="check_in_time" value="<?php echo htmlspecialchars($check_in_time); ?>">
+                            <input type="hidden" name="check_out_time" value="<?php echo htmlspecialchars($check_out_time); ?>">
                             <input type="hidden" name="total_amount" value="<?php echo $total_amount; ?>">
                             <input type="hidden" name="room_charge" value="<?php echo $room_charge; ?>">
                             <input type="hidden" name="tax_amount" value="<?php echo $tax_amount; ?>">
@@ -289,7 +293,7 @@ include 'includes/navbar.php';
 
                             <div class="d-grid gap-2">
                                 <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="bi bi-check-circle"></i> Confirm Booking - $<?php echo number_format($total_amount, 2); ?>
+                                    <i class="bi bi-check-circle"></i> Confirm Booking - ₱<?php echo number_format($total_amount, 2); ?>
                                 </button>
                                 <a href="rooms.php" class="btn btn-outline-secondary">
                                     <i class="bi bi-arrow-left"></i> Back to Rooms

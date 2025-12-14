@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <?php foreach ($room_types as $type): ?>
                                         <option value="<?php echo $type['room_type_id']; ?>" 
                                                 <?php echo $type['room_type_id'] == $room['room_type_id'] ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($type['type_name']); ?> - $<?php echo number_format($type['nightly_rate'], 2); ?>/night
+                                            <?php echo htmlspecialchars($type['type_name']); ?> - ₱<?php echo number_format($type['nightly_rate'], 2); ?>/night
                                         </option>
                                     <?php endforeach; ?>
                                 </select>

@@ -214,7 +214,7 @@ $recent_reservations = db_fetch_all($recent_result);
                     <i class="bi bi-cash-stack" style="font-size: 2rem;"></i>
                 </div>
                 <div class="stat-label">Total Revenue</div>
-                <div class="stat-value">$<?php echo number_format($total_revenue, 0); ?></div>
+                <div class="stat-value">₱<?php echo number_format($total_revenue, 0); ?></div>
                 <small style="opacity: 0.9;">Paid bookings</small>
             </div>
         </div>
@@ -239,7 +239,7 @@ $recent_reservations = db_fetch_all($recent_result);
         <div class="col-md-3 mb-3">
             <div class="quick-stat">
                 <i class="bi bi-clock-history"></i>
-                <h3>$<?php echo number_format($pending_amount, 0); ?></h3>
+                <h3>₱<?php echo number_format($pending_amount, 0); ?></h3>
                 <p class="text-muted mb-0">Pending Payments</p>
             </div>
         </div>
@@ -283,8 +283,14 @@ $recent_reservations = db_fetch_all($recent_result);
                                         <?php echo htmlspecialchars($res['type_name'] . ' - ' . $res['room_number']); ?>
                                     </span>
                                 </td>
-                                <td><?php echo date('M d, Y', strtotime($res['check_in_date'])); ?></td>
-                                <td><?php echo date('M d, Y', strtotime($res['check_out_date'])); ?></td>
+                                <td>
+                                    <?php echo date('M d, Y', strtotime($res['check_in_date'])); ?><br>
+                                    <small class="text-muted"><?php echo date('h:i A', strtotime($res['check_in_date'])); ?></small>
+                                </td>
+                                <td>
+                                    <?php echo date('M d, Y', strtotime($res['check_out_date'])); ?><br>
+                                    <small class="text-muted"><?php echo date('h:i A', strtotime($res['check_out_date'])); ?></small>
+                                </td>
                                 <td>
                                     <?php
                                     $badge_class = '';
@@ -297,8 +303,11 @@ $recent_reservations = db_fetch_all($recent_result);
                                     ?>
                                     <span class="badge badge-status <?php echo $badge_class; ?>"><?php echo $res['status']; ?></span>
                                 </td>
-                                <td><strong style="color: var(--accent-brown);">$<?php echo number_format($res['total_amount'], 2); ?></strong></td>
-                                <td><?php echo date('M d, Y', strtotime($res['booking_date'])); ?></td>
+                                <td><strong style="color: var(--accent-brown);">₱<?php echo number_format($res['total_amount'], 2); ?></strong></td>
+                                <td>
+                                    <?php echo date('M d, Y', strtotime($res['booking_date'])); ?><br>
+                                    <small class="text-muted"><?php echo date('h:i A', strtotime($res['booking_date'])); ?></small>
+                                </td>
                             </tr>
                             <?php endforeach; ?>
                         <?php else: ?>

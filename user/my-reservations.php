@@ -132,12 +132,12 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                                             <p class="mb-2">
                                                 <i class="bi bi-calendar-event" style="color: var(--accent-brown);"></i>
                                                 <strong>Check-in:</strong><br>
-                                                <?php echo date('M d, Y', strtotime($reservation['check_in_date'])); ?>
+                                                <?php echo date('M d, Y h:i A', strtotime($reservation['check_in_date'])); ?>
                                             </p>
                                             <p class="mb-2">
                                                 <i class="bi bi-calendar-x" style="color: var(--accent-brown);"></i>
                                                 <strong>Check-out:</strong><br>
-                                                <?php echo date('M d, Y', strtotime($reservation['check_out_date'])); ?>
+                                                <?php echo date('M d, Y h:i A', strtotime($reservation['check_out_date'])); ?>
                                             </p>
                                         </div>
                                     </div>
@@ -148,7 +148,7 @@ while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                                         <div>
                                             <strong style="color: var(--secondary-dark);">Total Amount:</strong>
                                             <h4 style="color: var(--accent-brown);" class="mb-0">
-                                                $<?php echo number_format($reservation['total_amount'], 2); ?>
+                                                ₱<?php echo number_format($reservation['total_amount'], 2); ?>
                                             </h4>
                                         </div>
                                         <div>

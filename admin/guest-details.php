@@ -156,7 +156,7 @@ while ($row = $res_result->fetchArray(SQLITE3_ASSOC)) {
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="text-uppercase mb-1">Total Spent</h6>
-                                    <h2 class="mb-0">$<?php echo number_format($total_spent, 2); ?></h2>
+                                    <h2 class="mb-0">₱<?php echo number_format($total_spent, 2); ?></h2>
                                 </div>
                                 <i class="bi bi-cash-stack" style="font-size: 3rem; opacity: 0.3;"></i>
                             </div>
@@ -206,8 +206,14 @@ while ($row = $res_result->fetchArray(SQLITE3_ASSOC)) {
                                 </span><br>
                                 <small class="text-muted">Room <?php echo htmlspecialchars($res['room_number']); ?></small>
                             </td>
-                            <td><?php echo date('M d, Y', strtotime($res['check_in_date'])); ?></td>
-                            <td><?php echo date('M d, Y', strtotime($res['check_out_date'])); ?></td>
+                            <td>
+                                <?php echo date('M d, Y', strtotime($res['check_in_date'])); ?><br>
+                                <small class="text-muted"><?php echo date('h:i A', strtotime($res['check_in_date'])); ?></small>
+                            </td>
+                            <td>
+                                <?php echo date('M d, Y', strtotime($res['check_out_date'])); ?><br>
+                                <small class="text-muted"><?php echo date('h:i A', strtotime($res['check_out_date'])); ?></small>
+                            </td>
                             <td>
                                 <?php
                                 $status_badge = '';
@@ -230,8 +236,11 @@ while ($row = $res_result->fetchArray(SQLITE3_ASSOC)) {
                                 ?>
                                 <span class="badge <?php echo $pay_badge; ?>"><?php echo $res['payment_status']; ?></span>
                             </td>
-                            <td><strong>$<?php echo number_format($res['total_amount'], 2); ?></strong></td>
-                            <td><?php echo date('M d, Y', strtotime($res['booking_date'])); ?></td>
+                            <td><strong>₱<?php echo number_format($res['total_amount'], 2); ?></strong></td>
+                            <td>
+                                <?php echo date('M d, Y', strtotime($res['booking_date'])); ?><br>
+                                <small class="text-muted"><?php echo date('h:i A', strtotime($res['booking_date'])); ?></small>
+                            </td>
                             <td>
                                 <a href="view-reservation.php?id=<?php echo $res['reservation_id']; ?>" 
                                    class="btn btn-sm btn-primary">

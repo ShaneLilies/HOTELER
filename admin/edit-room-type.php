@@ -210,7 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="row">
                         <div class="col-md-6">
                             <p><strong>Type:</strong> <?php echo htmlspecialchars($room_type['type_name']); ?></p>
-                            <p><strong>Rate:</strong> $<?php echo number_format($room_type['nightly_rate'], 2); ?> per night</p>
+                            <p><strong>Rate:</strong> ₱<?php echo number_format($room_type['nightly_rate'], 2); ?> per night</p>
                             <p><strong>Max Guests:</strong> <?php echo $room_type['max_guests']; ?></p>
                         </div>
                         <div class="col-md-6">

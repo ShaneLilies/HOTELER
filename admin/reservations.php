@@ -102,10 +102,24 @@ $reservations = db_fetch_all($result);
                                     </span><br>
                                     <small>Room <?php echo htmlspecialchars($res['room_number']); ?> • Floor <?php echo htmlspecialchars($res['floor']); ?></small>
                                 </td>
-                                <td><?php echo date('M d, Y', strtotime($res['check_in_date'])); ?></td>
-                                <td><?php echo date('M d, Y', strtotime($res['check_out_date'])); ?></td>
+                                <td class="timestamp-cell">
+                                    <span class="timestamp-date">
+                                        <i class="bi bi-calendar3"></i> <?php echo date('M d, Y', strtotime($res['check_in_date'])); ?>
+                                    </span>
+                                    <span class="timestamp-time">
+                                        <i class="bi bi-clock"></i> <?php echo date('h:i A', strtotime($res['check_in_date'])); ?>
+                                    </span>
+                                </td>
+                                <td class="timestamp-cell">
+                                    <span class="timestamp-date">
+                                        <i class="bi bi-calendar3"></i> <?php echo date('M d, Y', strtotime($res['check_out_date'])); ?>
+                                    </span>
+                                    <span class="timestamp-time">
+                                        <i class="bi bi-clock"></i> <?php echo date('h:i A', strtotime($res['check_out_date'])); ?>
+                                    </span>
+                                </td>
                                 <td class="text-center"><?php echo $res['num_guests']; ?></td>
-                                <td><strong>$<?php echo number_format($res['total_amount'], 2); ?></strong></td>
+                                <td><strong>₱<?php echo number_format($res['total_amount'], 2); ?></strong></td>
                                 <td>
                                     <?php
                                     $status_class = '';

@@ -1,11 +1,14 @@
 <?php
 require_once '../config/db.php';
+require_once '../config/settings.php';
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $room_type_id = intval($_POST['room_type_id']);
     $check_in = $_POST['check_in'];
     $check_out = $_POST['check_out'];
+    $check_in_time = $_POST['check_in_time'] ?? '14:00';
+    $check_out_time = $_POST['check_out_time'] ?? '12:00';
     $num_guests = intval($_POST['num_guests']);
     $total_amount = floatval($_POST['total_amount']);
     $room_charge = floatval($_POST['room_charge']);
@@ -20,8 +23,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         exit();
     }
 
+    // Combine date and time for check-in and check-out
+    $check_in_datetime = $check_in . ' ' . $check_in_time . ':00';
+    $check_out_datetime = $check_out . ' ' . $check_out_time . ':00';
+    
     // Validate dates
-    if (strtotime($check_in) >= strtotime($check_out)) {
+    if (strtotime($check_in_datetime) >= strtotime($check_out_datetime)) {
         $_SESSION['error'] = "Check-out date must be after check-in date!";
         header("Location: rooms.php");
         exit();
@@ -88,8 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         LIMIT 1
     ");
     $available_room_stmt->bindValue(1, $room_type_id, SQLITE3_INTEGER);
-    $available_room_stmt->bindValue(2, $check_in, SQLITE3_TEXT);
-    $available_room_stmt->bindValue(3, $check_out, SQLITE3_TEXT);
+    $available_room_stmt->bindValue(2, $check_in_datetime, SQLITE3_TEXT);
+    $available_room_stmt->bindValue(3, $check_out_datetime, SQLITE3_TEXT);
     $available_result = $available_room_stmt->execute();
     $available_room = $available_result->fetchArray(SQLITE3_ASSOC);
 
@@ -105,27 +112,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $conn->exec('BEGIN');
 
     try {
-        // Insert reservation
-        $res_stmt = $conn->prepare("INSERT INTO reservation (guest_id, room_id, check_in_date, check_out_date, num_guests, total_amount, status) 
-                                    VALUES (?, ?, ?, ?, ?, ?, 'Confirmed')");
+        // Insert reservation with explicit booking_date in Philippine timezone
+        $booking_datetime = get_current_datetime();
+        $res_stmt = $conn->prepare("INSERT INTO reservation (guest_id, room_id, check_in_date, check_out_date, num_guests, total_amount, status, booking_date) 
+                                    VALUES (?, ?, ?, ?, ?, ?, 'Confirmed', ?)");
         $res_stmt->bindValue(1, $guest_id, SQLITE3_INTEGER);
         $res_stmt->bindValue(2, $room_id, SQLITE3_INTEGER);
-        $res_stmt->bindValue(3, $check_in, SQLITE3_TEXT);
-        $res_stmt->bindValue(4, $check_out, SQLITE3_TEXT);
+        $res_stmt->bindValue(3, $check_in_datetime, SQLITE3_TEXT);
+        $res_stmt->bindValue(4, $check_out_datetime, SQLITE3_TEXT);
         $res_stmt->bindValue(5, $num_guests, SQLITE3_INTEGER);
         $res_stmt->bindValue(6, $total_amount, SQLITE3_FLOAT);
+        $res_stmt->bindValue(7, $booking_datetime, SQLITE3_TEXT);
         $res_stmt->execute();
         
         $reservation_id = $conn->lastInsertRowID();
         
-        // Insert billing
+        // Insert billing with explicit bill_date in Philippine timezone
+        $bill_datetime = get_current_datetime();
         $bill_stmt = $conn->prepare("INSERT INTO billing (reservation_id, room_charge, tax_amount, total_amount, payment_status, bill_date) 
-                                     VALUES (?, ?, ?, ?, ?, DATE('now'))");
+                                     VALUES (?, ?, ?, ?, ?, ?)");
         $bill_stmt->bindValue(1, $reservation_id, SQLITE3_INTEGER);
         $bill_stmt->bindValue(2, $room_charge, SQLITE3_FLOAT);
         $bill_stmt->bindValue(3, $tax_amount, SQLITE3_FLOAT);
         $bill_stmt->bindValue(4, $total_amount, SQLITE3_FLOAT);
         $bill_stmt->bindValue(5, $payment_status, SQLITE3_TEXT);
+        $bill_stmt->bindValue(6, $bill_datetime, SQLITE3_TEXT);
         $bill_stmt->execute();
         
         // If payment is made, mark room as Occupied
@@ -182,10 +193,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         </div>
                                         <div class="col-md-6">
                                             <p><strong>Floor:</strong> <?php echo htmlspecialchars($room['floor']); ?></p>
-                                            <p><strong>Check-in:</strong> <?php echo date('M d, Y', strtotime($check_in)); ?></p>
-                                            <p><strong>Check-out:</strong> <?php echo date('M d, Y', strtotime($check_out)); ?></p>
+                                            <p><strong>Check-in:</strong> <?php echo date('M d, Y h:i A', strtotime($check_in_datetime)); ?></p>
+                                            <p><strong>Check-out:</strong> <?php echo date('M d, Y h:i A', strtotime($check_out_datetime)); ?></p>
                                             <p><strong>Guests:</strong> <?php echo $num_guests; ?></p>
-                                            <p><strong>Total:</strong> $<?php echo number_format($total_amount, 2); ?></p>
+                                            <p><strong>Total:</strong> ₱<?php echo number_format($total_amount, 2); ?></p>
                                             <p><strong>Payment:</strong> 
                                                 <span class="badge bg-<?php echo $payment_status === 'Paid' ? 'success' : 'warning'; ?>">
                                                     <?php echo $payment_status; ?>

@@ -123,11 +123,11 @@ $nights = (strtotime($reservation['check_out_date']) - strtotime($reservation['c
                         </tr>
                         <tr>
                             <td><strong>Check-in:</strong></td>
-                            <td><?php echo date('l, F d, Y', strtotime($reservation['check_in_date'])); ?></td>
+                            <td><?php echo date('l, F d, Y h:i A', strtotime($reservation['check_in_date'])); ?></td>
                         </tr>
                         <tr>
                             <td><strong>Check-out:</strong></td>
-                            <td><?php echo date('l, F d, Y', strtotime($reservation['check_out_date'])); ?></td>
+                            <td><?php echo date('l, F d, Y h:i A', strtotime($reservation['check_out_date'])); ?></td>
                         </tr>
                         <tr>
                             <td><strong>Duration:</strong></td>
@@ -220,7 +220,7 @@ $nights = (strtotime($reservation['check_out_date']) - strtotime($reservation['c
                         </tr>
                         <tr>
                             <td><strong>Nightly Rate:</strong></td>
-                            <td>$<?php echo number_format($reservation['nightly_rate'], 2); ?></td>
+                            <td>₱<?php echo number_format($reservation['nightly_rate'], 2); ?></td>
                         </tr>
                         <tr>
                             <td><strong>Max Guests:</strong></td>
@@ -250,15 +250,15 @@ $nights = (strtotime($reservation['check_out_date']) - strtotime($reservation['c
                         </tr>
                         <tr>
                             <td><strong>Room Charge:</strong></td>
-                            <td>$<?php echo number_format($reservation['room_charge'], 2); ?></td>
+                            <td>₱<?php echo number_format($reservation['room_charge'], 2); ?></td>
                         </tr>
                         <tr>
                             <td><strong>Tax (12%):</strong></td>
-                            <td>$<?php echo number_format($reservation['tax_amount'], 2); ?></td>
+                            <td>₱<?php echo number_format($reservation['tax_amount'], 2); ?></td>
                         </tr>
                         <tr class="table-success">
                             <td><strong>Total Amount:</strong></td>
-                            <td><strong>$<?php echo number_format($reservation['bill_total'], 2); ?></strong></td>
+                            <td><strong>₱<?php echo number_format($reservation['bill_total'], 2); ?></strong></td>
                         </tr>
                         <tr>
                             <td><strong>Payment Status:</strong></td>
