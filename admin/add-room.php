@@ -81,31 +81,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     box-shadow: 0 0 0 0.2rem rgba(166, 94, 70, 0.25);
 }
 
+/* SIMPLE BUTTON STYLES - NO HOVER TRICKS */
+.form-buttons {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
 .btn {
-    padding: 12px 25px;
+    padding: 12px 30px;
     border-radius: 10px;
     font-weight: 600;
-    transition: all 0.3s ease;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 100 !important;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--accent-brown), var(--warm-tan));
-    border: none;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(166, 94, 70, 0.4);
+    background-color: #A65E46 !important;
+    color: white !important;
 }
 
 .btn-secondary {
-    background-color: #6c757d;
-    border: none;
+    background-color: #6c757d !important;
+    color: white !important;
 }
 
-.btn-secondary:hover {
-    background-color: #5a6268;
-    transform: translateY(-2px);
+/* Remove all hover effects that might hide the button */
+.btn-primary:hover, .btn-secondary:hover {
+    opacity: 1 !important;
+    visibility: visible !important;
+    filter: brightness(90%);
 }
 
 .alert {
@@ -233,13 +247,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <strong>Manage Images</strong> button in the All Rooms page.
                         </div>
                         
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <a href="all-rooms.php" class="btn btn-secondary">
-                                <i class="bi bi-x-circle"></i> Cancel
-                            </a>
+                        <!-- SIMPLE BUTTONS - ALWAYS VISIBLE -->
+                        <div class="form-buttons">
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle"></i> Add Room
+                                <i class="bi bi-check-circle me-2"></i> Submit
                             </button>
+                            <a href="all-rooms.php" class="btn btn-secondary ms-2">
+                                <i class="bi bi-x-circle me-2"></i> Cancel
+                            </a>
                         </div>
                     </form>
                 </div>
